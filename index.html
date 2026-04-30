@@ -1,0 +1,367 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Travel Planner</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Carter+One&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:#ffffff;
+  overflow-x:hidden;
+}
+
+/* 헤더 */
+header{
+  text-align:center;
+  padding:40px 20px 20px;
+}
+
+h1{
+  font-family:"Carter One",system-ui;
+  font-size:38px;
+  margin:0;
+  color:#111827;
+}
+
+p{
+  color:#94a3b8;
+  margin-top:10px;
+}
+
+/* 버튼 */
+.top-bar{
+  text-align:center;
+  margin-top:20px;
+}
+
+button{
+  border:none;
+  background:#111827;
+  color:white;
+  padding:14px 22px;
+  border-radius:16px;
+  cursor:pointer;
+  font-size:15px;
+  transition:0.2s;
+}
+
+button:hover{
+  transform:translateY(-2px);
+}
+
+/* 지도 */
+.map{
+  max-width:1200px;
+  margin:40px auto;
+  position:relative;
+}
+
+.map img{
+  width:100%;
+  border-radius:24px;
+}
+
+/* 핀 */
+.pin{
+  position:absolute;
+  width:18px;
+  height:18px;
+  background:#60a5fa;
+  border-radius:50%;
+  cursor:pointer;
+  transform:translate(-50%, -50%);
+  box-shadow:0 0 0 8px rgba(96,165,250,0.15);
+  transition:0.2s;
+}
+
+.pin:hover{
+  transform:translate(-50%, -50%) scale(1.3);
+}
+
+/* 라벨 */
+.label{
+  position:absolute;
+  left:50%;
+  top:-10px;
+  transform:translate(-50%, -100%);
+  background:white;
+  color:#111827;
+  padding:8px 12px;
+  border-radius:12px;
+  font-size:13px;
+  white-space:nowrap;
+  display:none;
+  box-shadow:0 4px 12px rgba(0,0,0,0.12);
+}
+
+.pin:hover .label{
+  display:block;
+}
+
+@media(max-width:768px){
+
+  h1{
+    font-size:28px;
+  }
+
+  .pin{
+    width:14px;
+    height:14px;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+  <h1>Travel Planner</h1>
+
+  <p>
+    Select your destination ✈️
+  </p>
+
+  <div class="top-bar">
+
+    <button id="addBtn">
+      + 여행 추가
+    </button>
+
+  </div>
+
+</header>
+
+<div class="map" id="map">
+
+  <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg">
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc
+}
+from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyA_0_kM7UnwEJAUKACwH6AQJ6AngTP-bNE",
+
+  authDomain:
+  "travel-planner-49dad.firebaseapp.com",
+
+  projectId:
+  "travel-planner-49dad",
+
+  storageBucket:
+  "travel-planner-49dad.firebasestorage.app",
+
+  messagingSenderId:
+  "621137516469",
+
+  appId:
+  "1:621137516469:web:16fff93fde059b71c9abfc",
+
+  measurementId:
+  "G-NKBLJ275F4"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+console.log("🔥 Firebase 연결 성공");
+
+const map =
+document.getElementById("map");
+
+let trips = [];
+
+/* --------------------------
+   Firebase 불러오기
+-------------------------- */
+
+async function loadTrips(){
+
+  const docRef =
+    doc(db, "app", "trips");
+
+  const docSnap =
+    await getDoc(docRef);
+
+  if(docSnap.exists()){
+
+    trips =
+      docSnap.data().items || [];
+
+  }else{
+
+    trips = [];
+  }
+
+  renderPins();
+}
+
+/* --------------------------
+   Firebase 저장
+-------------------------- */
+
+async function saveTrips(){
+
+  await setDoc(
+
+    doc(db, "app", "trips"),
+
+    {
+      items: trips
+    }
+
+  );
+
+  console.log("🔥 저장 완료");
+}
+
+/* --------------------------
+   핀 렌더링
+-------------------------- */
+
+function renderPins(){
+
+  document
+    .querySelectorAll(".pin")
+    .forEach(pin => pin.remove());
+
+  trips.forEach(trip=>{
+
+    const pin =
+      document.createElement("div");
+
+    pin.className = "pin";
+
+    pin.style.top = trip.top;
+    pin.style.left = trip.left;
+
+    pin.innerHTML = `
+      <div class="label">
+        ${trip.title}
+      </div>
+    `;
+
+    /* 좌클릭 */
+    pin.onclick = () => {
+
+      location.href =
+      `trip.html?id=${trip.id}`;
+    };
+
+    /* 우클릭 삭제 */
+    pin.oncontextmenu = (e) => {
+
+      e.preventDefault();
+
+      const ok = confirm(
+        `${trip.title} 삭제할까요?`
+      );
+
+      if(!ok) return;
+
+      trips = trips.filter(
+        t => t.id !== trip.id
+      );
+
+      renderPins();
+      saveTrips();
+    };
+
+    map.appendChild(pin);
+  });
+}
+
+/* --------------------------
+   여행 추가
+-------------------------- */
+
+function addTrip(){
+
+  const title =
+    prompt("여행 이름 입력");
+
+  if(!title) return;
+
+  alert(
+    "지도에서 위치를 클릭해주세요 ✨"
+  );
+
+  map.onclick = async (e) => {
+
+    const rect =
+      map.getBoundingClientRect();
+
+    const left =
+      ((e.clientX - rect.left)
+      / rect.width) * 100;
+
+    const top =
+      ((e.clientY - rect.top)
+      / rect.height) * 100;
+
+    trips.push({
+
+      id:title.toLowerCase(),
+
+      title:title,
+
+      top:`${top}%`,
+
+      left:`${left}%`
+    });
+
+    renderPins();
+
+    await saveTrips();
+
+    map.onclick = null;
+  };
+}
+
+/* --------------------------
+   버튼 연결
+-------------------------- */
+
+document
+  .getElementById("addBtn")
+  .addEventListener("click", addTrip);
+
+/* --------------------------
+   시작
+-------------------------- */
+
+loadTrips();
+
+</script>
+
+</body>
+</html>
+
