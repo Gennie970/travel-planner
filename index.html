@@ -277,23 +277,52 @@ function renderPins(){
     };
 
     /* 우클릭 삭제 */
-    pin.oncontextmenu = (e) => {
+pin.oncontextmenu = async (e) => {
 
-      e.preventDefault();
+  e.preventDefault();
 
-      const ok = confirm(
-        `${trip.title} 삭제할까요?`
-      );
+  const action = prompt(
+`1 = 이름 수정
+2 = 삭제`
+  );
 
-      if(!ok) return;
+  /* 이름 수정 */
+  if(action === "1"){
 
-      trips = trips.filter(
-        t => t.id !== trip.id
-      );
+    const newTitle = prompt(
+      "새 여행 이름 입력",
+      trip.title
+    );
 
-      renderPins();
-      saveTrips();
-    };
+    if(!newTitle) return;
+
+    trip.title = newTitle;
+
+    renderPins();
+
+    await saveTrips();
+
+    return;
+  }
+
+  /* 삭제 */
+  if(action === "2"){
+
+    const ok = confirm(
+      `${trip.title} 삭제할까요?`
+    );
+
+    if(!ok) return;
+
+    trips = trips.filter(
+      t => t.id !== trip.id
+    );
+
+    renderPins();
+
+    await saveTrips();
+  }
+};
 
     map.appendChild(pin);
   });
