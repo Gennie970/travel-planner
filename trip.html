@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Trip Planner</title>
+
+<style>
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:white;
+  min-height:100vh;
+  background-size:cover;
+  background-position:center;
+  background-attachment:fixed;
+  overflow-x:hidden;
+}
+
+/* 배경 어둡게 */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.35);
+  z-index:-1;
+}
+
+/* MAP 버튼 */
+#floatingMapBtn{
+  position:fixed;
+  top:5px;
+  left:5px;
+  z-index:999;
+  backdrop-filter:blur(10px);
+  background:rgba(255,255,255,0.9);
+}
+
+/* 배경 버튼 */
+#bgEditBtn{
+  position:fixed;
+  bottom:18px;
+  right:18px;
+  z-index:999;
+
+  width:46px;
+  height:46px;
+  border-radius:50%;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:rgba(255,255,255,0.12);
+  border:1px solid rgba(255,255,255,0.18);
+  backdrop-filter:blur(14px);
+  color:white;
+
+  cursor:pointer;
+  transition:0.25s;
+
+  overflow:hidden;
+}
+
+#bgEditBtn:hover{
+  width:150px;
+  border-radius:999px;
+  justify-content:flex-start;
+  padding-left:14px;
+}
+
+#bgEditBtn::after{
+  content:"배경 변경";
+  font-size:13px;
+  margin-left:10px;
+  opacity:0;
+  transition:0.2s;
+  white-space:nowrap;
+}
+
+#bgEditBtn:hover::after{
+  opacity:1;
+}
+
+/* 유튜브 버튼 */
+#youtubeBtn{
+  position:fixed;
+  bottom:76px;
+  right:18px;
+  z-index:999;
+
+  width:46px;
+  height:46px;
+  border-radius:50%;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:rgba(255,255,255,0.12);
+  border:none;
+
+  cursor:pointer;
+  transition:0.25s;
+
+  overflow:hidden;
+}
+
+#youtubeBtn:hover{
+  width:170px;
+  border-radius:999px;
+  justify-content:flex-start;
+  padding-left:14px;
+}
+
+#youtubeBtn::after{
+  content:"YouTube 링크";
+  font-size:13px;
+  margin-left:10px;
+  opacity:0;
+  transition:0.2s;
+  white-space:nowrap;
+  color:white;
+}
+
+#youtubeBtn:hover::after{
+  opacity:1;
+}
+
+/* 상단 */
+.hero{
+  text-align:center;
+  padding:80px 20px 40px;
+}
+
+.hero h1{
+  font-size:54px;
+  margin:0;
+  font-weight:800;
+  text-shadow:0 4px 20px rgba(0,0,0,0.3);
+  cursor:pointer;
+}
+
+.hero p{
+  opacity:0.9;
+  margin-top:10px;
+  font-size:18px;
+}
+
+/* 유튜브 링크 */
+#youtubeArea{
+  margin-top:18px;
+}
+
+#youtubeArea a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  width:50px;
+  height:50px;
+
+  border-radius:50%;
+
+  background:rgba(255,255,255,0.15);
+  backdrop-filter:blur(12px);
+
+  text-decoration:none;
+
+  transition:0.2s;
+}
+
+#youtubeArea a:hover{
+  transform:scale(1.08);
+}
+
+#youtubeArea svg{
+  width:26px;
+  height:26px;
+}
+
+/* 메인 */
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:20px;
+}
+
+/* 유리효과 */
+.glass{
+  backdrop-filter:blur(18px);
+  background:rgba(255,255,255,0.12);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:28px;
+  padding:24px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.18);
+}
+
+/* 버튼 */
+button{
+  border:none;
+  background:white;
+  color:#111827;
+  padding:12px 18px;
+  border-radius:14px;
+  cursor:pointer;
+  font-size:14px;
+  font-weight:700;
+  transition:0.2s;
+}
+
+button:hover{
+  transform:translateY(-2px);
+}
+
+/* 버튼 영역 */
+.top-buttons{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+#dateBtn{
+  margin-left:auto;
+  display:block;
+}
+
+/* 테이블 */
+table{
+  width:100%;
+  border-collapse:collapse;
+  overflow:hidden;
+  border-radius:20px;
+}
+
+th{
+  background:rgba(255,255,255,0.2);
+  padding:16px;
+  cursor:pointer;
+}
+
+td{
+  background:rgba(255,255,255,0.08);
+  padding:16px;
+  text-align:center;
+  border-top:1px solid rgba(255,255,255,0.08);
+}
+
+tr:hover td{
+  background:rgba(255,255,255,0.14);
+}
+
+/* 일정 클릭 */
+.schedule-link{
+  cursor:pointer;
+  font-weight:600;
+}
+
+.schedule-link:hover{
+  text-decoration:underline;
+}
+
+/* 총비용 */
+.total-cost{
+  margin-top:24px;
+  text-align:right;
+  font-size:22px;
+  font-weight:700;
+}
+
+/* 상세 */
+.detail-page{
+  display:none;
+}
+
+.detail-item{
+  background:rgba(255,255,255,0.12);
+  padding:20px;
+  border-radius:20px;
+  margin-bottom:16px;
+}
+
+.detail-item input{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  margin-top:8px;
+  margin-bottom:14px;
+}
+
+label{
+  font-size:14px;
+  opacity:0.9;
+}
+
+/* 모바일 */
+@media(max-width:768px){
+
+  .hero h1{
+    font-size:34px;
+  }
+
+  table{
+    font-size:13px;
+  }
+
+  th,td{
+    padding:10px 6px;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<button id="floatingMapBtn">
+  ⬅
+</button>
+
+<button id="youtubeBtn">
+
+  <svg viewBox="0 0 24 24" fill="white">
+    <path d="M23.5 6.2s-.2-1.7-.9-2.4c-.8-.9-1.8-.9-2.2-1C17.3 2.5 12 2.5 12 2.5h0s-5.3 0-8.4.3c-.4.1-1.4.1-2.2 1C.7 4.5.5 6.2.5 6.2S0 8.2 0 10.3v1.4c0 2.1.5 4.1.5 4.1s.2 1.7.9 2.4c.8.9 1.9.9 2.4 1 1.8.2 8.2.3 8.2.3s5.3 0 8.4-.3c.4-.1 1.4-.1 2.2-1 .7-.7.9-2.4.9-2.4s.5-2 .5-4.1v-1.4c0-2.1-.5-4.1-.5-4.1zM9.5 15V7.8l6.3 3.6-6.3 3.6z"/>
+  </svg>
+
+</button>
+
+<button id="bgEditBtn">
+  🖼
+</button>
+
+<div class="hero">
+
+  <h1 id="title">
+    Loading...
+  </h1>
+
+
+
+  <div id="youtubeArea"></div>
+
+</div>
+
+<div class="container">
+
+  <div id="mainPage" class="glass">
+
+    <div class="top-buttons">
+
+      <button id="dateBtn">
+        + 날짜 추가
+      </button>
+
+    </div>
+
+    <div id="tableArea"></div>
+
+  </div>
+
+  <div
+    id="detailPage"
+    class="glass detail-page"
+  ></div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc
+}
+from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyA_0_kM7UnwEJAUKACwH6AQJ6AngTP-bNE",
+
+  authDomain:
+  "travel-planner-49dad.firebaseapp.com",
+
+  projectId:
+  "travel-planner-49dad",
+
+  storageBucket:
+  "travel-planner-49dad.firebasestorage.app",
+
+  messagingSenderId:
+  "621137516469",
+
+  appId:
+  "1:621137516469:web:16fff93fde059b71c9abfc",
+
+  measurementId:
+  "G-NKBLJ275F4"
+};
+
+const app =
+initializeApp(firebaseConfig);
+
+const db =
+getFirestore(app);
+
+const params =
+new URLSearchParams(location.search);
+
+const tripId =
+params.get("id");
+
+let trip = {
+
+  id:tripId,
+
+  title:"New Trip",
+
+  youtubeUrl:"",
+
+  background:
+  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=2000",
+
+  data:{}
+};
+
+async function loadTrip(){
+
+  const docRef =
+    doc(db, "trips", tripId);
+
+  const docSnap =
+    await getDoc(docRef);
+
+  if(docSnap.exists()){
+
+    trip = docSnap.data();
+
+    if(!trip.youtubeUrl){
+      trip.youtubeUrl = "";
+    }
+
+  }else{
+
+    await saveTrip();
+  }
+
+  applyTrip();
+
+  renderTable();
+}
+
+async function saveTrip(){
+
+  await setDoc(
+
+    doc(db, "trips", tripId),
+
+    trip
+
+  );
+}
+
+function applyTrip(){
+
+  document
+    .getElementById("title")
+    .innerText = trip.title;
+
+  document.body.style.backgroundImage =
+  `url('${trip.background}')`;
+
+  const youtubeArea =
+    document.getElementById("youtubeArea");
+
+  if(trip.youtubeUrl){
+
+    youtubeArea.innerHTML = `
+
+      <a
+        href="${trip.youtubeUrl}"
+        target="_blank"
+      >
+
+        <svg viewBox="0 0 24 24" fill="white">
+          <path d="M23.5 6.2s-.2-1.7-.9-2.4c-.8-.9-1.8-.9-2.2-1C17.3 2.5 12 2.5 12 2.5h0s-5.3 0-8.4.3c-.4.1-1.4.1-2.2 1C.7 4.5.5 6.2.5 6.2S0 8.2 0 10.3v1.4c0 2.1.5 4.1.5 4.1s.2 1.7.9 2.4c.8.9 1.9.9 2.4 1 1.8.2 8.2.3 8.2.3s5.3 0 8.4-.3c.4-.1 1.4-.1 2.2-1 .7-.7.9-2.4.9-2.4s.5-2 .5-4.1v-1.4c0-2.1-.5-4.1-.5-4.1zM9.5 15V7.8l6.3 3.6-6.3 3.6z"/>
+        </svg>
+
+      </a>
+    `;
+
+  }else{
+
+    youtubeArea.innerHTML = "";
+  }
+}
+
+function getTotalCost(){
+
+  let total = 0;
+
+  Object.values(trip.data)
+  .forEach(day=>{
+
+    day.forEach(item=>{
+
+      total += Number(item.cost || 0);
+    });
+  });
+
+  return total;
+}
+
+function renderTable(){
+
+  const area =
+    document.getElementById("tableArea");
+
+  const dates =
+    Object.keys(trip.data).sort();
+
+  if(dates.length === 0){
+
+    area.innerHTML = `
+      <div style="
+        text-align:center;
+        padding:60px 20px;
+        font-size:22px;
+      ">
+        ✨ 일정이 아직 없어요
+      </div>
+    `;
+
+    return;
+  }
+
+  let times = new Set();
+
+  dates.forEach(date=>{
+
+    trip.data[date].forEach(item=>{
+
+      if(item.time){
+
+        times.add(item.time);
+      }
+    });
+  });
+
+  times =
+    Array.from(times).sort();
+
+  let html = `<table>`;
+
+  html += `<tr><th>시간</th>`;
+
+  dates.forEach(date=>{
+
+    html += `
+      <th class="date-header"
+        data-date="${date}">
+        ${date}
+      </th>
+    `;
+  });
+
+  html += `</tr>`;
+
+  times.forEach(time=>{
+
+    html += `<tr>`;
+
+    html += `<td>${time}</td>`;
+
+    dates.forEach(date=>{
+
+      const item =
+        trip.data[date]
+        .find(i=>i.time === time);
+
+      if(item){
+
+        html += `
+          <td>
+
+            <div
+              class="schedule-link"
+              onclick="
+                window.open(
+                  'https://www.google.com/maps/search/${encodeURIComponent(item.text)}'
+                )
+              "
+            >
+              ${item.text}
+            </div>
+
+            <div style="
+              margin-top:6px;
+              font-size:12px;
+              opacity:0.8;
+            ">
+              💰 ${item.cost || 0}
+            </div>
+
+          </td>
+        `;
+
+      }else{
+
+        html += `<td>-</td>`;
+      }
+    });
+
+    html += `</tr>`;
+  });
+
+  html += `</table>`;
+
+  html += `
+    <div class="total-cost">
+      총 비용:
+      ₩ ${getTotalCost().toLocaleString()}원
+    </div>
+  `;
+
+  area.innerHTML = html;
+
+  document
+  .querySelectorAll(".date-header")
+  .forEach(el=>{
+
+    /* 클릭 → 날짜 열기 */
+    el.addEventListener("click", ()=>{
+
+      openDate(
+        el.dataset.date
+      );
+    });
+
+    /* 우클릭 → 삭제 */
+    el.addEventListener("contextmenu", async (e)=>{
+
+      
+
+      e.preventDefault();
+
+      const ok = confirm(
+        `${el.dataset.date} 날짜 삭제할까요?`
+      );
+
+      if(!ok) return;
+
+      delete trip.data[el.dataset.date];
+
+      await saveTrip();
+
+      renderTable();
+    });
+
+     /* 모바일 길게 누르기 */
+    let pressTimer;
+
+    el.addEventListener("touchstart", ()=>{
+
+      pressTimer = setTimeout(async ()=>{
+
+        const ok = confirm(
+          `${el.dataset.date} 날짜 삭제할까요?`
+        );
+
+        if(!ok) return;
+
+        delete trip.data[el.dataset.date];
+
+        await saveTrip();
+
+        renderTable();
+
+      }, 700);
+    });
+
+    el.addEventListener("touchend", ()=>{
+
+      clearTimeout(pressTimer);
+    });
+
+    el.addEventListener("touchmove", ()=>{
+
+      clearTimeout(pressTimer);
+    });
+
+  });
+
+
+}
+
+
+async function addDate(){
+
+  const date =
+    prompt("날짜 입력 (YYYY-MM-DD)");
+
+  if(!date) return;
+
+  if(!trip.data[date]){
+
+    trip.data[date] = [];
+  }
+
+  renderTable();
+
+  await saveTrip();
+}
+
+function openDate(date){
+
+  document
+    .getElementById("mainPage")
+    .style.display = "none";
+
+  const detail =
+    document
+    .getElementById("detailPage");
+
+  detail.style.display = "block";
+
+  let html = `
+
+    <div class="top-buttons">
+
+      <button id="backDetailBtn">
+        ⬅ Back
+      </button>
+
+    </div>
+
+    <h2>${date}</h2>
+  `;
+
+  trip.data[date].forEach((item,index)=>{
+
+    html += `
+
+      <div class="detail-item">
+
+        <label>⏰ 시간</label>
+
+        <input
+          class="edit-input"
+          data-date="${date}"
+          data-index="${index}"
+          data-key="time"
+          value="${item.time}"
+        >
+
+        <label>✏️ 일정</label>
+
+        <input
+          class="edit-input"
+          data-date="${date}"
+          data-index="${index}"
+          data-key="text"
+          value="${item.text}"
+        >
+
+        <label>💰 비용</label>
+
+        <input
+          class="edit-input"
+          data-date="${date}"
+          data-index="${index}"
+          data-key="cost"
+          value="${item.cost}"
+        >
+
+        <button
+          class="deleteBtn"
+          data-date="${date}"
+          data-index="${index}"
+        >
+          삭제
+        </button>
+
+      </div>
+    `;
+  });
+
+  html += `
+    <div style="
+      display:flex;
+      justify-content:flex-end;
+      margin-top:24px;
+    ">
+      <button id="addItemBtn">
+        + 일정 추가
+      </button>
+    </div>
+  `;
+
+  detail.innerHTML = html;
+
+  document
+    .getElementById("backDetailBtn")
+    .addEventListener("click", closeDetail);
+
+  document
+    .getElementById("addItemBtn")
+    .addEventListener("click", ()=>{
+
+      addItem(date);
+    });
+
+  document
+    .querySelectorAll(".edit-input")
+    .forEach(input=>{
+
+      input.addEventListener("change",
+      async ()=>{
+
+        const d = input.dataset.date;
+
+        const i = input.dataset.index;
+
+        const k = input.dataset.key;
+
+        trip.data[d][i][k] =
+          input.value;
+
+        await saveTrip();
+
+        renderTable();
+      });
+    });
+
+  document
+    .querySelectorAll(".deleteBtn")
+    .forEach(btn=>{
+
+      btn.addEventListener("click",
+      async ()=>{
+
+        const d = btn.dataset.date;
+
+        const i = btn.dataset.index;
+
+        trip.data[d].splice(i,1);
+
+        await saveTrip();
+
+        openDate(d);
+
+        renderTable();
+      });
+    });
+}
+
+function closeDetail(){
+
+  document
+    .getElementById("detailPage")
+    .style.display = "none";
+
+  document
+    .getElementById("mainPage")
+    .style.display = "block";
+
+  renderTable();
+}
+
+async function addItem(date){
+
+  trip.data[date].push({
+
+    time:"",
+    text:"",
+    cost:""
+  });
+
+  await saveTrip();
+
+  openDate(date);
+}
+
+/* 제목 수정 */
+
+document
+.getElementById("title")
+.addEventListener("click",
+async ()=>{
+
+  const newTitle =
+    prompt(
+      "여행 제목 수정",
+      trip.title
+    );
+
+  if(!newTitle) return;
+
+  trip.title = newTitle;
+
+  applyTrip();
+
+  await saveTrip();
+});
+
+/* 배경 수정 */
+
+document
+.getElementById("bgEditBtn")
+.addEventListener("click",
+async ()=>{
+
+  const newBg =
+    prompt(
+      "배경 이미지 URL 입력",
+      trip.background
+    );
+
+  if(!newBg) return;
+
+  trip.background = newBg;
+
+  applyTrip();
+
+  await saveTrip();
+});
+
+/* 유튜브 링크 수정 */
+
+document
+.getElementById("youtubeBtn")
+.addEventListener("click",
+async ()=>{
+
+  const url =
+    prompt(
+      "YouTube URL 입력",
+      trip.youtubeUrl || ""
+    );
+
+  if(url === null) return;
+
+  trip.youtubeUrl = url;
+
+  applyTrip();
+
+  await saveTrip();
+});
+
+/* 버튼 */
+
+document
+  .getElementById("dateBtn")
+  .addEventListener("click",
+  addDate);
+
+document
+  .getElementById("floatingMapBtn")
+  .addEventListener("click", ()=>{
+
+    location.href = "index.html";
+  });
+
+loadTrip();
+
+</script>
+
+</body>
+</html>
