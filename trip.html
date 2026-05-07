@@ -236,8 +236,11 @@ button:hover{
 /* 테이블 */
 table{
   width:100%;
-  border-collapse:collapse;
-  overflow:hidden;
+  min-width:700px;
+
+  border-collapse:separate;
+  border-spacing:0;
+
   border-radius:20px;
 }
 
@@ -310,10 +313,17 @@ label{
 }
 
 table{
+  width:100%;
   min-width:700px;
+
+  border-collapse:separate;
+  border-spacing:0;
+
+  border-radius:20px;
 }
 
 td, th{
+  min-width:120px;
   white-space:nowrap;
 }
 
@@ -330,11 +340,12 @@ td, th{
   }
 
   table{
-    min-width:650px;
+    min-width:700px;
     font-size:13px;
   }
 
   td, th{
+    min-width:120px;
     padding:12px 10px;
   }
 
