@@ -302,22 +302,50 @@ label{
   opacity:0.9;
 }
 
-/* 모바일 */
+/* 모바일 테이블 개선 */
+.table-wrapper{
+  width:100%;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+table{
+  min-width:700px;
+}
+
+td, th{
+  white-space:nowrap;
+}
+
+/* 모바일 최적화 */
 @media(max-width:768px){
 
-  .hero h1{
-    font-size:34px;
+  .container{
+    padding:10px;
+  }
+
+  .glass{
+    padding:14px;
+    border-radius:20px;
   }
 
   table{
+    min-width:650px;
     font-size:13px;
   }
 
-  th,td{
-    padding:10px 6px;
+  td, th{
+    padding:12px 10px;
+  }
+
+  .schedule-link{
+    font-size:13px;
+  }
+
+  .total-cost{
+    font-size:18px;
   }
 }
-
 </style>
 </head>
 
@@ -363,7 +391,9 @@ label{
 
     </div>
 
+    <div class="table-wrapper">
     <div id="tableArea"></div>
+</div>
 
   </div>
 
